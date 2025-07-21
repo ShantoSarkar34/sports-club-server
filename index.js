@@ -1,12 +1,16 @@
 const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+
 const app = express();
 const port = process.env.PORT || 3000;
-require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
+
+const SECRET = `${process.env.DB_TOKEN}`;
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@sports-club.eejumeu.mongodb.net/?retryWrites=true&w=majority&appName=sports-club`;
 
@@ -23,28 +27,33 @@ async function run() {
     await client.connect();
 
     const database = client.db("sports-club");
-    const usersCollection = database.collection("courts");
+    const courtsCollection = database.collection("courts"); // fixed typo
+    const usersCollection = database.collection("userdb"); // admin/users collection
+    const adminCourtsCollection = database.collection("adminCourts");
 
+    // Get all courts
     app.get("/all-court", async (req, res) => {
-      const cursor = usersCollection.find();
+      const cursor = courtsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
+    // Get one court by ID
     app.get("/all-court/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await usersCollection.findOne(query);
+      const result = await courtsCollection.findOne(query);
       res.send(result);
     });
 
+    // Get courts by userEmail query param
     app.get("/my-courts", async (req, res) => {
       try {
         const email = req.query.email;
         if (!email) {
           return res.status(400).send({ message: "Email query is required" });
         }
-        const result = await usersCollection
+        const result = await courtsCollection
           .find({ userEmail: email })
           .toArray();
         res.send(result);
@@ -53,16 +62,73 @@ async function run() {
       }
     });
 
-    app.post("/all-court", async (req, res) => {
-      const newCourt = req.body;
-      const result = await usersCollection.insertOne(newCourt);
+    // Admin login route
+    app.post("/login", async (req, res) => {
+      const { email, password } = req.body;
+
+      const user = await usersCollection.findOne({ email });
+      if (!user) return res.status(404).send({ message: "User not found" });
+
+      // Simple password check (plaintext) - change to bcrypt for production!
+      if (password !== user.password) {
+        return res.status(401).send({ message: "Wrong password" });
+      }
+
+      // Create JWT token
+      const token = jwt.sign({ email: user.email, role: user.role }, SECRET, {
+        expiresIn: "1h",
+      });
+
+      res.send({ token, role: user.role });
+    });
+
+    // Middleware to verify JWT token
+    function verifyToken(req, res, next) {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) return res.status(401).send({ message: "No token" });
+
+      const token = authHeader.split(" ")[1];
+      jwt.verify(token, SECRET, (err, decoded) => {
+        if (err) return res.status(403).send({ message: "Invalid token" });
+        req.user = decoded;
+        next();
+      });
+    }
+
+    // Protected route for admin to get all courts
+    app.get("/admin/all-courts", verifyToken, async (req, res) => {
+      if (req.user.role !== "admin") {
+        return res.status(403).send({ message: "Not authorized" });
+      }
+      const courts = await usersCollection.find().toArray();
+      res.send(courts);
+    });
+
+    app.get("/admin/courts", async (req, res) => {
+      const cursor = adminCourtsCollection.find();
+      const result = await cursor.toArray();
       res.send(result);
     });
 
+    app.post("/admin/courts", async (req, res) => {
+      const newCourt = req.body;
+      const result = await adminCourtsCollection.insertOne(newCourt);
+      res.send(result);
+      console.log(result);
+    });
+
+    // Create a new court
+    app.post("/all-court", async (req, res) => {
+      const newCourt = req.body;
+      const result = await courtsCollection.insertOne(newCourt);
+      res.send(result);
+    });
+
+    // Delete court by ID
     app.delete("/all-court/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await usersCollection.deleteOne(query);
+      const result = await courtsCollection.deleteOne(query);
       res.send(result);
     });
 
