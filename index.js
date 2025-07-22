@@ -134,7 +134,6 @@ async function run() {
       const newCourt = req.body;
       const result = await adminCourtsCollection.insertOne(newCourt);
       res.send(result);
-      console.log(result);
     });
 
     // Create a new court
@@ -142,6 +141,23 @@ async function run() {
       const newCourt = req.body;
       const result = await courtsCollection.insertOne(newCourt);
       res.send(result);
+    });
+
+    // update court form admin 
+        app.put("/admin/courts/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const user = req.body;
+      const updatedInfo = {
+        $set: {
+          type: user.type,
+          price: user.price,
+          image: user.image,
+          slots: user.slots,
+        },
+      };
+      const result = await adminCourtsCollection.updateOne(filter, updatedInfo);
+      res.send(result);    
     });
 
     // Delete court by ID
