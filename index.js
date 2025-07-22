@@ -30,6 +30,7 @@ async function run() {
     const courtsCollection = database.collection("courts"); // fixed typo
     const usersCollection = database.collection("userdb"); // admin/users collection
     const adminCourtsCollection = database.collection("adminCourts");
+    const announcementCollection = database.collection("announcement")
 
     // Get all courts
     app.get("/all-court", async (req, res) => {
@@ -128,6 +129,21 @@ async function run() {
       }
     });
 
+    app.get("/admin/announcement", async (req, res) => {
+      const cursor = announcementCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+
+    // create a new announsment form admin 
+    app.post("/admin/announcement", async (req, res) => {
+      const newCourt = req.body;
+      const result = await announcementCollection.insertOne(newCourt);
+      res.send(result);
+    });
+
+    // Create a new court from admin
     app.post("/admin/courts", async (req, res) => {
       const newCourt = req.body;
       const result = await adminCourtsCollection.insertOne(newCourt);
