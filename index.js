@@ -150,6 +150,25 @@ async function run() {
       }
     });
 
+    // update court form admin
+    app.put("/admin/announcement/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const update = req.body;
+      const updatedInfo = {
+        $set: {
+          title: update.title,
+          des: update.des,
+          date: update.date,
+        },
+      };
+      const result = await announcementCollection.updateOne(
+        filter,
+        updatedInfo
+      );
+      res.send(result);
+    });
+
     // create a new announsment form admin
     app.post("/admin/announcement", async (req, res) => {
       const newCourt = req.body;
@@ -185,6 +204,7 @@ async function run() {
         },
       };
       const result = await adminCourtsCollection.updateOne(filter, updatedInfo);
+      res.send(result);
     });
 
     // delete court from admin
