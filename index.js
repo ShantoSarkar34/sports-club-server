@@ -110,6 +110,26 @@ async function run() {
       res.send(result);
     });
 
+    // Get one court by ID
+    app.get("/admin/courts/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        console.log("Requested ID:", id);
+
+        const query = { _id: new ObjectId(id) };
+        const result = await adminCourtsCollection.findOne(query);
+
+        if (!result) {
+          return res.status(404).send({ message: "Court not found" });
+        }
+
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching court:", error);
+        res.status(500).send({ message: "Server error", error });
+      }
+    });
+
     app.post("/admin/courts", async (req, res) => {
       const newCourt = req.body;
       const result = await adminCourtsCollection.insertOne(newCourt);
