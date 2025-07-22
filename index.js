@@ -114,8 +114,6 @@ async function run() {
     app.get("/admin/courts/:id", async (req, res) => {
       try {
         const id = req.params.id;
-        console.log("Requested ID:", id);
-
         const query = { _id: new ObjectId(id) };
         const result = await adminCourtsCollection.findOne(query);
 
@@ -143,8 +141,8 @@ async function run() {
       res.send(result);
     });
 
-    // update court form admin 
-        app.put("/admin/courts/:id", async (req, res) => {
+    // update court form admin
+    app.put("/admin/courts/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const user = req.body;
@@ -157,10 +155,17 @@ async function run() {
         },
       };
       const result = await adminCourtsCollection.updateOne(filter, updatedInfo);
-      res.send(result);    
     });
 
-    // Delete court by ID
+    // delete court from admin
+    app.delete("/admin/courts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await adminCourtsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // Delete approve message from user dashboard
     app.delete("/all-court/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
