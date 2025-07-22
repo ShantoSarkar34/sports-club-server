@@ -30,7 +30,7 @@ async function run() {
     const courtsCollection = database.collection("courts"); // fixed typo
     const usersCollection = database.collection("userdb"); // admin/users collection
     const adminCourtsCollection = database.collection("adminCourts");
-    const announcementCollection = database.collection("announcement")
+    const announcementCollection = database.collection("announcement");
 
     // Get all courts
     app.get("/all-court", async (req, res) => {
@@ -128,15 +128,29 @@ async function run() {
         res.status(500).send({ message: "Server error", error });
       }
     });
-
+    // get announcement from announcementCollection
     app.get("/admin/announcement", async (req, res) => {
       const cursor = announcementCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
+    // get a single announcement from announcementCollection
+    app.get("/admin/announcement/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await announcementCollection.findOne(query);
+        if (!result) {
+          return res.status(404).send({ message: "Court not found" });
+        }
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching court:", error);
+        res.status(500).send({ message: "Server error", error });
+      }
+    });
 
-
-    // create a new announsment form admin 
+    // create a new announsment form admin
     app.post("/admin/announcement", async (req, res) => {
       const newCourt = req.body;
       const result = await announcementCollection.insertOne(newCourt);
