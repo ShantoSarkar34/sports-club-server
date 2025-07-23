@@ -104,7 +104,7 @@ async function run() {
       const courts = await usersCollection.find().toArray();
       res.send(courts);
     });
-
+    // get admin all courts =================
     app.get("/admin/courts", async (req, res) => {
       const cursor = adminCourtsCollection.find();
       const result = await cursor.toArray();
@@ -129,6 +129,7 @@ async function run() {
       }
     });
     // get announcement from announcementCollection
+
     app.get("/admin/announcement", async (req, res) => {
       const cursor = announcementCollection.find();
       const result = await cursor.toArray();
@@ -169,18 +170,28 @@ async function run() {
       res.send(result);
     });
 
+    // delete announsment form admin
+    app.delete("/admin/announcement/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await announcementCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // create a new announsment form admin
     app.post("/admin/announcement", async (req, res) => {
-      const newCourt = req.body;
-      const result = await announcementCollection.insertOne(newCourt);
-      res.send(result);
+      const newAnnouncement = req.body;
+      const result = await announcementCollection.insertOne(newAnnouncement);
+      newAnnouncement._id = result.insertedId;
+      res.send(newAnnouncement);
     });
 
     // Create a new court from admin
     app.post("/admin/courts", async (req, res) => {
       const newCourt = req.body;
       const result = await adminCourtsCollection.insertOne(newCourt);
-      res.send(result);
+      newCourt._id = result.insertedId;
+      res.send(newCourt);
     });
 
     // Create a new court
@@ -212,6 +223,21 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await adminCourtsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // update approve form member & admin dashboard 
+
+    app.put("/all-court/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const user = req.body;
+      const updatedInfo = {
+        $set: {
+          status: user.status,
+        },
+      };
+      const result = await courtsCollection.updateOne(filter, updatedInfo);
       res.send(result);
     });
 
