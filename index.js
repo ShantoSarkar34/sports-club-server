@@ -194,6 +194,21 @@ async function run() {
       res.send(result);
     });
 
+    // update coupons form admin
+    app.put("/admin/coupons/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const update = req.body;
+      const updatedInfo = {
+        $set: {
+          coupon: update.coupon,
+          discount: update.discount,
+        },
+      };
+      const result = await couponCollection.updateOne(filter, updatedInfo);
+      res.send(result);
+    });
+
     // delete announsment form admin
     app.delete("/admin/announcement/:id", async (req, res) => {
       const id = req.params.id;
