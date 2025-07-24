@@ -27,10 +27,11 @@ async function run() {
     await client.connect();
 
     const database = client.db("sports-club");
-    const courtsCollection = database.collection("courts"); // fixed typo
-    const usersCollection = database.collection("userdb"); // admin/users collection
+    const courtsCollection = database.collection("courts");
+    const usersCollection = database.collection("userdb"); 
     const adminCourtsCollection = database.collection("adminCourts");
     const announcementCollection = database.collection("announcement");
+    const couponCollection = database.collection("coupons");
 
     // Get all courts
     app.get("/all-court", async (req, res) => {
@@ -104,7 +105,7 @@ async function run() {
       const courts = await usersCollection.find().toArray();
       res.send(courts);
     });
-    // get admin all courts =================
+    // get admin all courts 
     app.get("/admin/courts", async (req, res) => {
       const cursor = adminCourtsCollection.find();
       const result = await cursor.toArray();
@@ -198,6 +199,13 @@ async function run() {
     app.post("/all-court", async (req, res) => {
       const newCourt = req.body;
       const result = await courtsCollection.insertOne(newCourt);
+      res.send(result);
+    });
+
+    // create coupon form admin
+    app.post("/admin/coupons", async (req, res) => {
+      const newCourt = req.body;
+      const result = await couponCollection.insertOne(newCourt);
       res.send(result);
     });
 
