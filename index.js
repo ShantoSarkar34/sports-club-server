@@ -32,6 +32,7 @@ async function run() {
     const adminCourtsCollection = database.collection("adminCourts");
     const announcementCollection = database.collection("announcement");
     const couponCollection = database.collection("coupons");
+    const paymentCollection = database.collection("payment");
 
     // Get all courts
     app.get("/all-court", async (req, res) => {
@@ -108,6 +109,13 @@ async function run() {
     // get admin all courts
     app.get("/admin/courts", async (req, res) => {
       const cursor = adminCourtsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get all payment form member
+    app.get("/member/payment", async (req, res) => {
+      const cursor = paymentCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -217,6 +225,22 @@ async function run() {
       res.send(result);
     });
 
+    // delete coupon form admin
+    app.delete("/admin/coupons/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await couponCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // create a new announsment form admin
+    app.post("/member/payment", async (req, res) => {
+      const newPayment = req.body;
+      const result = await paymentCollection.insertOne(newPayment);
+      newPayment._id = result.insertedId;
+      res.send(result);
+    });
+
     // create a new announsment form admin
     app.post("/admin/announcement", async (req, res) => {
       const newAnnouncement = req.body;
@@ -274,16 +298,17 @@ async function run() {
     });
 
     // update approve form member & admin dashboard
-
     app.put("/all-court/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const user = req.body;
       const updatedInfo = {
         $set: {
-          status: user.status,
+          ...(user.status && { status: user.status }),
+          ...(user.paymentStatus && { paymentStatus: user.paymentStatus }),
         },
       };
+
       const result = await courtsCollection.updateOne(filter, updatedInfo);
       res.send(result);
     });
