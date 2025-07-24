@@ -28,7 +28,7 @@ async function run() {
 
     const database = client.db("sports-club");
     const courtsCollection = database.collection("courts");
-    const usersCollection = database.collection("userdb"); 
+    const usersCollection = database.collection("userdb");
     const adminCourtsCollection = database.collection("adminCourts");
     const announcementCollection = database.collection("announcement");
     const couponCollection = database.collection("coupons");
@@ -105,11 +105,34 @@ async function run() {
       const courts = await usersCollection.find().toArray();
       res.send(courts);
     });
-    // get admin all courts 
+    // get admin all courts
     app.get("/admin/courts", async (req, res) => {
       const cursor = adminCourtsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
+    });
+
+    // get all coupons form admin
+    app.get("/admin/coupons", async (req, res) => {
+      const cursor = couponCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get a single coupon  from couponCollection
+    app.get("/admin/coupons/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await couponCollection.findOne(query);
+        if (!result) {
+          return res.status(404).send({ message: "Court not found" });
+        }
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching court:", error);
+        res.status(500).send({ message: "Server error", error });
+      }
     });
 
     // Get one court by ID
@@ -129,8 +152,8 @@ async function run() {
         res.status(500).send({ message: "Server error", error });
       }
     });
-    // get announcement from announcementCollection
 
+    // get announcement from announcementCollection
     app.get("/admin/announcement", async (req, res) => {
       const cursor = announcementCollection.find();
       const result = await cursor.toArray();
@@ -204,9 +227,10 @@ async function run() {
 
     // create coupon form admin
     app.post("/admin/coupons", async (req, res) => {
-      const newCourt = req.body;
-      const result = await couponCollection.insertOne(newCourt);
-      res.send(result);
+      const newCoupon = req.body;
+      const result = await couponCollection.insertOne(newCoupon);
+      const savedCoupon = { _id: result.insertedId, ...newCoupon };
+      res.send(savedCoupon);
     });
 
     // update court form admin
@@ -234,7 +258,7 @@ async function run() {
       res.send(result);
     });
 
-    // update approve form member & admin dashboard 
+    // update approve form member & admin dashboard
 
     app.put("/all-court/:id", async (req, res) => {
       const id = req.params.id;
